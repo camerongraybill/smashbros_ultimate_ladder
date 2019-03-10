@@ -1,0 +1,12 @@
+{% extends 'smash_ladder/base.html' %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<h2>Edit your Profile</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Confirm Changes</button>
+</form>
+{% endblock %}

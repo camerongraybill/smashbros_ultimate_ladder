@@ -1,0 +1,116 @@
+<!-- Cameron Graybill, csg58@drexel.edu -->
+<!-- CS530: DUI, Term Project -->
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Smash Ladder - {% block title %}{% endblock %}</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href="{% static "smash_ladder/styles/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "smash_ladder/styles/main.css" %}" rel="stylesheet">
+
+    <script src="{% static "smash_ladder/scripts/jquery-3.3.1.min.js" %}"></script>
+    <script src="{% static "smash_ladder/scripts/bootstrap.min.js" %}"></script>
+    <link rel="shortcut icon" href="{% static 'smash_ladder/images/logo.ico' %}">
+</head>
+
+<body>
+
+<header>
+    <!-- Used basically the same header as in class -->
+    <div class="container">
+        <div class="row">
+            <div class="col-sm">
+                <nav class="navbar navbar-expand-md navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="{% static "smash_ladder/images/logo.svg" %}"
+                                                          style="max-height: 40px;" alt="Smash Logo"></a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse"
+                            data-target="#navbarSupportedContent"
+                            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav mr-auto">
+                            <li class="nav-item{% if active == 'Leader Board' %} active{% endif %}">
+                                <a class="nav-link" href="{% url "leader_board" %}">Leader Board</a>
+                            </li>
+                            <li class="nav-item{% if active == 'Stats' %} active{% endif %}">
+                                <a class="nav-link" href="{% url "stats" %}">Stats</a>
+                            </li>
+                            <li class="nav-item dropdown {% if active == 'Players' %} active{% endif %}">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Players
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    {% for player in players %}
+                                        <a class="dropdown-item"
+                                           href="{% url "player_details" player.id %}">{{ player.user.username }}</a>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown {% if active == 'Schools' %} active{% endif %}">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Schools
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    {% for school in schools %}
+                                        <a class="dropdown-item"
+                                           href="{% url "school_details" school.id %}">{{ school.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown {% if active == 'Characters' %} active{% endif %} ">
+                                <a class="nav-link dropdown-toggle " href="#" id="navbarDropdown" role="button"
+                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Characters
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    {% for character in characters %}
+                                        <a class="dropdown-item"
+                                           href="{% url "character_details" character.id %}">{{ character.name }}</a>
+                                    {% endfor %}
+                                </div>
+                            </li>
+                            {% if user.is_staff %}
+                                <li class="nav-item{% if active == 'Report' %} active{% endif %}">
+                                    <a class="nav-link" href="{% url "report" %}">Report</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        <ul class="navbar-nav ml-auto">
+                            {% if user.is_authenticated %}
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                       href="{% url "profile" %}">Hi {{ user.username }}</a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{% url "login" %}">Log in</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="container content">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+</body>
+
+</html>

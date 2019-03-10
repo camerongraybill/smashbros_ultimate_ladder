@@ -1,0 +1,12 @@
+{% extends 'smash_ladder/base.html' %}
+
+{% block title %}Report a Match{% endblock %}
+
+{% block content %}
+<h2>Match Details</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Report</button>
+</form>
+{% endblock %}

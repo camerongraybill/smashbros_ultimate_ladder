@@ -1,0 +1,8 @@
+{% extends "smash_ladder/base.html" %}
+
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block content %}
+    Everything about {{ character.name }}!
+    <img alt="{{ character.name }}" src="/{{ character.photo.url }}" class="profile-picture"/>
+{% endblock %}
