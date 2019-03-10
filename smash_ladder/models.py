@@ -1,13 +1,19 @@
+from collections import Counter
+from typing import Counter as Counter_T, Set as Set_T
+from itertools import chain
+
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
-from django.db.models import Model, CharField, URLField, ForeignKey, CASCADE, DateTimeField, OneToOneField, ImageField
+from django.db.models import Model, CharField, ForeignKey, CASCADE, DateTimeField, OneToOneField, ImageField
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 
 class School(Model):
     mascot = CharField(max_length=100)
     name = CharField(max_length=100)
-    location = ImageField(null=True, upload_to="static/data/school_photos/")
-    photo = URLField()
+    location = CharField(max_length=100)
+    photo = ImageField(null=True, upload_to="static/data/school_photos/")
 
     def __str__(self):
         return self.name
@@ -16,7 +22,7 @@ class School(Model):
 class Profile(Model):
     school = ForeignKey(School, on_delete=CASCADE, null=True)
     profile_picture = ImageField(null=True, upload_to="static/data/profile_pictures/")
-    user = OneToOneField(
+    user: "User" = OneToOneField(
         settings.AUTH_USER_MODEL,
         CASCADE
     )
@@ -33,16 +39,33 @@ class Character(Model):
         return self.name
 
 
-class Game(Model):
-    player_one = ForeignKey(Profile, on_delete=CASCADE, related_name='+')
-    player_two = ForeignKey(Profile, on_delete=CASCADE, related_name='+')
-    player_one_char = ForeignKey(Character, on_delete=CASCADE, related_name='+')
-    player_two_char = ForeignKey(Character, on_delete=CASCADE, related_name='+')
-    winner = ForeignKey(Profile, on_delete=CASCADE, related_name='+')
-
-
 class Set(Model):
-    game_one = ForeignKey(Game, on_delete=CASCADE, related_name='+')
-    game_two = ForeignKey(Game, on_delete=CASCADE, related_name='+')
-    game_three = ForeignKey(Game, on_delete=CASCADE, related_name='+', null=True)
     happened_at = DateTimeField()
+
+    @property
+    def players(self) -> Set_T[Profile]:
+        return {*chain.from_iterable(x.players for x in self.games.all())}
+
+    @property
+    def win_counts(self) -> Counter_T[Profile]:
+        return Counter(x.winner for x in self.games.all())
+
+    @property
+    def winner(self) -> Profile:
+        return self.win_counts.most_common(1)[0][0]
+
+    @property
+    def loser(self) -> Profile:
+        return self.win_counts.most_common(2)[1][0]
+
+
+class Game(Model):
+    set = ForeignKey(Set, on_delete=CASCADE, related_name='games')
+    winner = ForeignKey(Profile, on_delete=CASCADE, related_name='wins')
+    loser = ForeignKey(Profile, on_delete=CASCADE, related_name='losses')
+    winner_char = ForeignKey(Character, on_delete=CASCADE, related_name='+')
+    loser_char = ForeignKey(Character, on_delete=CASCADE, related_name='+')
+
+    @property
+    def players(self) -> Set_T[Profile]:
+        return {*(self.winner, self.loser)}

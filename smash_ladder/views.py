@@ -8,6 +8,7 @@ from django.views.generic.base import ContextMixin
 
 from smash_ladder.forms import EditProfileForm, GameReportForm
 from smash_ladder.models import Profile, School, Character
+from smash_ladder.services import RatingService
 
 
 class NavBarDataMixin(ContextMixin):
@@ -68,11 +69,19 @@ class EditProfile(LoginRequiredMixin, UpdateView, NavBarDataMixin):
     active_name = "Profile"
     form_class = EditProfileForm
     success_url = reverse_lazy('profile')
-    template_name = 'smash_ladder/profile.html'
+    template_name = 'smash_ladder/profile/edit.html'
 
     def get_object(self, queryset=None):
         prof, _ = Profile.objects.get_or_create(user=self.request.user)
         return prof
+
+
+class ViewProfile(TemplateView, NavBarDataMixin):
+    active_name = "Profile"
+    template_name = 'smash_ladder/profile/view.html'
+
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs, rating=RatingService.get_rating_for(request.user))
 
 
 @method_decorator(staff_member_required, name='dispatch')

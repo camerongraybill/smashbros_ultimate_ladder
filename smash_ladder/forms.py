@@ -12,4 +12,4 @@ class EditProfileForm(ModelForm):
 class GameReportForm(ModelForm):
     class Meta:
         model = Game
-        fields = ('player_one', 'player_two', 'player_one_char', 'player_two_char', 'winner')
+        fields = ('winner', 'loser', 'winner_char', 'loser_char')
