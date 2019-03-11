@@ -1,10 +1,11 @@
-from collections import Counter
-from typing import Counter as Counter_T, Set as Set_T
+from collections import Counter, OrderedDict, defaultdict
 from itertools import chain
+from typing import Set as Set_T, Dict, DefaultDict, List, Optional
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db.models import Model, CharField, ForeignKey, CASCADE, DateTimeField, OneToOneField, ImageField
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
 
@@ -14,6 +15,14 @@ class School(Model):
     name = CharField(max_length=100)
     location = CharField(max_length=100)
     photo = ImageField(null=True, upload_to="static/data/school_photos/")
+
+    def __str__(self):
+        return self.name
+
+
+class Character(Model):
+    name = CharField(max_length=100)
+    photo = ImageField(upload_to="static/data/character_photos/")
 
     def __str__(self):
         return self.name
@@ -30,13 +39,34 @@ class Profile(Model):
     def __str__(self):
         return self.user.username
 
+    @property
+    def games(self) -> "List[Game]":
+        return list(self.wins.all()) + list(self.losses.all())
 
-class Character(Model):
-    name = CharField(max_length=100)
-    photo = ImageField(upload_to="static/data/character_photos/")
+    @property
+    def rating(self) -> float:
+        from smash_ladder.services import RatingService
+        return RatingService.get_rating_for(self)
 
-    def __str__(self):
-        return self.name
+    @property
+    def get_played_stats(self) -> DefaultDict[Character, int]:
+        fake_counter = defaultdict(int)
+        for game in self.games:
+            fake_counter[game.get_played_as(self)] += 1
+        return fake_counter
+
+    @property
+    def favorite_character(self) -> Optional[Character]:
+        c = Counter(self.get_played_stats)
+        if len(c) == 0:
+            return None
+        return c.most_common(1)[0][0]
+
+    @property
+    def win_rate(self) -> Optional[float]:
+        if len(self.games) == 0:
+            return None
+        return self.wins.count() / len(self.games)
 
 
 class Set(Model):
@@ -47,16 +77,33 @@ class Set(Model):
         return {*chain.from_iterable(x.players for x in self.games.all())}
 
     @property
-    def win_counts(self) -> Counter_T[Profile]:
-        return Counter(x.winner for x in self.games.all())
+    def win_counts(self) -> Dict[Profile, int]:
+        counter = Counter(x.winner for x in self.games.all())
+        if len(counter) == 0:
+            return OrderedDict()
+        d = dict(counter)
+        for player in self.players:
+            if player not in d:
+                d[player] = 0
+        return d
 
     @property
     def winner(self) -> Profile:
-        return self.win_counts.most_common(1)[0][0]
+        curr_max, player = -1, None
+        for iter_player, wins in self.win_counts.items():
+            if wins > curr_max:
+                curr_max = wins
+                player = iter_player
+        return player
 
     @property
     def loser(self) -> Profile:
-        return self.win_counts.most_common(2)[1][0]
+        curr_min, player = float('inf'), None
+        for iter_player, wins in self.win_counts.items():
+            if wins < curr_min:
+                curr_min = wins
+                player = iter_player
+        return player
 
 
 class Game(Model):
@@ -69,3 +116,11 @@ class Game(Model):
     @property
     def players(self) -> Set_T[Profile]:
         return {*(self.winner, self.loser)}
+
+    def get_played_as(self, user: Profile) -> Character:
+        if user == self.winner:
+            return self.winner_char
+        elif user == self.loser:
+            return self.loser_char
+        else:
+            raise KeyError()

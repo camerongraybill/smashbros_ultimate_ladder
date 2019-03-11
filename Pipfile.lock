@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9ce6eba3355f22ada22c331fbaf5244a2ea2c3ebeaa0d9ffdcac7dee79d200cd"
+            "sha256": "5ea45faea46ee3752cea88a63e6dec9d1fbc37d8594caf9f83601b869942490b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,29 @@
             ],
             "index": "pypi",
             "version": "==2.1.7"
+        },
+        "django-bootstrap3-datetimepicker": {
+            "hashes": [
+                "sha256:a4239a86e13187c213a4b73408216c8c743bbaa6b4366c5089c92496b74a8ba3"
+            ],
+            "index": "pypi",
+            "version": "==2.2.3"
+        },
+        "django-bootstrap4-datetimepicker": {
+            "hashes": [
+                "sha256:464a641167dd07fd33acea3954d01161df2b5e9b3a09488892afe2058bc66e8c",
+                "sha256:e6890b4386a15f4352cff610367c2b03b7a7e118c4a8e07fce2e5e313f06de92"
+            ],
+            "index": "pypi",
+            "version": "==4.2"
+        },
+        "django-mathfilters": {
+            "hashes": [
+                "sha256:530774776e5bbf8061c95e3542166fa8a4ec4cd8992b6dc9f3cad866c71051b5",
+                "sha256:e570e113a92dd54125fc2066a93b509a521d3f42a4502731775d0f7b92acc3e8"
+            ],
+            "index": "pypi",
+            "version": "==0.4.0"
         },
         "pillow": {
             "hashes": [

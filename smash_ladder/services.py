@@ -1,9 +1,8 @@
 from typing import Iterable, Tuple, Dict, NewType, cast
 
+import smash_ladder
 from .apps import RatingServiceConfig
 from .apps import SmashLadderConfig
-from .models import Profile
-from .models import Set
 
 SetId = NewType('SetId', int)
 
@@ -12,8 +11,8 @@ RatingChange = NewType('RatingChange', float)
 Rating = NewType('Rating', float)
 
 
-class SetImpact(Dict[Profile, RatingChange]):
-    def __missing__(self, key: Profile):
+class SetImpact(Dict[smash_ladder.models.Profile, RatingChange]):
+    def __missing__(self, key: smash_ladder.models.Profile):
         return 0
 
 
@@ -30,7 +29,7 @@ class _RatingService:
         self._build_ratings()
 
     def _build_ratings(self):
-        for match in Set.objects.order_by("happened_at"):
+        for match in smash_ladder.models.Set.objects.order_by("happened_at"):
             self.add_set(match)
 
     def invalidate(self):
@@ -40,24 +39,25 @@ class _RatingService:
     def get_set_impact(self, event_id: SetId) -> SetImpact:
         return self._set_impacts[event_id]
 
-    def add_set(self, event: Set) -> SetImpact:
+    def add_set(self, event: smash_ladder.models.Set) -> SetImpact:
         impact = self.get_set_impact(cast(SetId, event.id))
         p1, p2 = event.winner, event.loser
         p1_before, p2_before = self.get_rating_for(p1), self.get_rating_for(p2)
         p1_expected = p1_before / (p1_before + p2_before)
         p2_expected = 1 - p1_expected
         win_counts = event.win_counts
-        amount_played = len(event.games)
+        amount_played = len(event.games.all())
         p1_actual, p2_actual = win_counts[p1] / amount_played, win_counts[p2] / amount_played
         impact[p1], impact[p2] = self.config.k_factor * (p1_actual - p1_expected), \
-                                       self.config.k_factor * (p2_actual - p2_expected)
+                                 self.config.k_factor * (p2_actual - p2_expected)
         return impact
 
-    def get_rating_for(self, user: Profile) -> Rating:
+    def get_rating_for(self, user: smash_ladder.models.Profile) -> Rating:
         return cast(Rating,
                     self.config.default_rating + sum(x[user] for x in self._set_impacts.values()))
 
-    def get_ratings(self, users: Iterable[Profile]) -> Iterable[Tuple[Profile, Rating]]:
+    def get_ratings(self, users: Iterable[smash_ladder.models.Profile]) -> Iterable[
+        Tuple[smash_ladder.models.Profile, Rating]]:
         for user in users:
             yield user, self.get_rating_for(user)
 

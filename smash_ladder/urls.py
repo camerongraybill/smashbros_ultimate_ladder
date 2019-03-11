@@ -13,5 +13,5 @@ urlpatterns = [
     path('accounts/signup/', views.SignUp.as_view(), name='signup'),
     path('profile', views.ViewProfile.as_view(), name='profile'),
     path('profile/edit', views.EditProfile.as_view(), name='edit_profile'),
-    path('report', views.Report.as_view(), name='report')
+    path('report', views.report, name='report')
 ]

@@ -8,6 +8,9 @@ verify_ssl = true
 [packages]
 django = "*"
 pillow = "*"
+django-bootstrap3-datetimepicker = "*"
+django-bootstrap4-datetimepicker = "*"
+django-mathfilters = "*"
 
 [requires]
 python_version = "3.7"

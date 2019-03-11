@@ -1,12 +1,19 @@
 {% extends 'smash_ladder/base.html' %}
+{% load crispy_forms_tags %}
 
 {% block title %}Report a Set{% endblock %}
 
 {% block content %}
-<h2>Match Details</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Report</button>
-</form>
+    <h1>Submit a Match</h1>
+    <form class="form-horizontal" method="post" action="">
+        {% csrf_token %}
+        <h2>Match Details</h2>
+        {{ setform|crispy }}
+        {{ formset.management_form }}
+        {% for form in formset %}
+            <h2 class="game-counter">Game {{ forloop.counter }}</h2>
+            {{ form|crispy }}
+        {% endfor %}
+        <button type="submit" class="btn btn-success">Report</button>
+    </form>
 {% endblock %}

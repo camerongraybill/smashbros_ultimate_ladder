@@ -1,24 +1,29 @@
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
-from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DetailView, TemplateView, UpdateView
 from django.views.generic.base import ContextMixin
 
-from smash_ladder.forms import EditProfileForm, GameReportForm
-from smash_ladder.models import Profile, School, Character
+from smash_ladder.forms import EditProfileForm, SetReportForm, GameFormSet
+from smash_ladder.models import Profile, School, Character, Set, Game
 from smash_ladder.services import RatingService
+
+
+def get_default_context_data():
+    return {
+        'players': Profile.objects.all(),
+        'schools': School.objects.all(),
+        'characters': Character.objects.all()
+    }
 
 
 class NavBarDataMixin(ContextMixin):
     active_name = None
 
     def get_context_data(self, **kwargs):
-        return super().get_context_data(**kwargs,
-                                        players=Profile.objects.all(),
-                                        schools=School.objects.all(),
-                                        characters=Character.objects.all(),
+        return super().get_context_data(**kwargs, **get_default_context_data(),
                                         active=self.active_name)
 
 
@@ -46,6 +51,11 @@ class CharacterDetail(DetailView, NavBarDataMixin):
 class LeaderBoard(TemplateView, NavBarDataMixin):
     active_name = "Leader Board"
     template_name = "smash_ladder/leader_board.html"
+
+    def get_context_data(self, **kwargs):
+        players = Profile.objects.all()
+        players = sorted(players, key=lambda x: x.rating, reverse=True)
+        return super().get_context_data(**kwargs, leaderboard_players=players)
 
 
 class Stats(TemplateView, NavBarDataMixin):
@@ -80,12 +90,37 @@ class ViewProfile(TemplateView, NavBarDataMixin):
     active_name = "Profile"
     template_name = 'smash_ladder/profile/view.html'
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs, rating=RatingService.get_rating_for(request.user))
 
+@staff_member_required
+def report(request):
+    if request.method == 'GET':
+        setform = SetReportForm()
+        formset = GameFormSet()
+        return render(request, 'smash_ladder/report.html',
+                      {'setform': setform, 'formset': formset, 'active': 'Report', **get_default_context_data()})
 
-@method_decorator(staff_member_required, name='dispatch')
-class Report(CreateView, NavBarDataMixin):
-    form_class = GameReportForm
-    active_name = "Report"
-    template_name = "smash_ladder/report.html"
+    else:
+        setform = SetReportForm(request.POST)
+        formset = GameFormSet(request.POST)
+        if setform.is_valid() and formset.is_valid():
+            s = Set(happened_at=setform.cleaned_data['when'])
+            s.save()
+            p1, p2 = setform.cleaned_data['player_one'], setform.cleaned_data['player_two']
+            for game_form in formset:
+                if game_form.cleaned_data['winner'] == 'Player One':
+                    g = Game(set=s,
+                             winner=p1,
+                             loser=p2,
+                             winner_char=game_form.cleaned_data['player_one_character'],
+                             loser_char=game_form.cleaned_data['player_two_character']
+                             )
+                else:
+                    g = Game(set=s,
+                             winner=p2,
+                             loser=p1,
+                             winner_char=game_form.cleaned_data['player_two_character'],
+                             loser_char=game_form.cleaned_data['player_one_character']
+                             )
+                g.save()
+            RatingService.add_set(s)
+            return redirect('report')

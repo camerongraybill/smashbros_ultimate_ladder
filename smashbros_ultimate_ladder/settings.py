@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'smash_ladder.apps.SmashLadderConfig',
+    'crispy_forms',
+    'mathfilters'
 ]
 
 MIDDLEWARE = [
@@ -104,9 +106,9 @@ LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'EST'
 
-USE_I18N = True
+#USE_I18N = True
 
-USE_L10N = True
+#USE_L10N = True
 
 USE_TZ = True
 
@@ -121,3 +123,7 @@ STATICFILES_DIRS = (
 
 LOGIN_REDIRECT_URL = '/leader_board'
 LOGOUT_REDIRECT_URL = '/leader_board'
+
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+DATETIME_INPUT_FORMATS = ['%Y-%m-%dT%H:%M']
