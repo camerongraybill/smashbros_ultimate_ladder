@@ -8,7 +8,6 @@ from django.views.generic.base import ContextMixin
 
 from smash_ladder.forms import EditProfileForm, SetReportForm, GameFormSet
 from smash_ladder.models import Profile, School, Character, Set, Game
-from smash_ladder.services import RatingService
 
 
 def get_default_context_data():
@@ -48,6 +47,13 @@ class CharacterDetail(DetailView, NavBarDataMixin):
     active_name = "Characters"
 
 
+class MatchDetail(DetailView, NavBarDataMixin):
+    model = Set
+    context_object_name = 'match'
+    template_name = "smash_ladder/match_detail.html"
+    active_name = "Matches"
+
+
 class LeaderBoard(TemplateView, NavBarDataMixin):
     active_name = "Leader Board"
     template_name = "smash_ladder/leader_board.html"
@@ -56,11 +62,6 @@ class LeaderBoard(TemplateView, NavBarDataMixin):
         players = Profile.objects.all()
         players = sorted(players, key=lambda x: x.rating, reverse=True)
         return super().get_context_data(**kwargs, leaderboard_players=players)
-
-
-class Stats(TemplateView, NavBarDataMixin):
-    active_name = "Stats"
-    template_name = "smash_ladder/stats.html"
 
 
 Index = LeaderBoard
@@ -86,11 +87,6 @@ class EditProfile(LoginRequiredMixin, UpdateView, NavBarDataMixin):
         return prof
 
 
-class ViewProfile(TemplateView, NavBarDataMixin):
-    active_name = "Profile"
-    template_name = 'smash_ladder/profile/view.html'
-
-
 @staff_member_required
 def report(request):
     if request.method == 'GET':
@@ -107,7 +103,8 @@ def report(request):
             s.save()
             p1, p2 = setform.cleaned_data['player_one'], setform.cleaned_data['player_two']
             for game_form in formset:
-                if game_form.cleaned_data['winner'] == 'Player One':
+                print(game_form.cleaned_data)
+                if game_form.cleaned_data['winner'] == '1':
                     g = Game(set=s,
                              winner=p1,
                              loser=p2,
@@ -122,5 +119,7 @@ def report(request):
                              loser_char=game_form.cleaned_data['player_one_character']
                              )
                 g.save()
-            RatingService.add_set(s)
+            from smash_ladder import services
+
+            services.RatingService.invalidate()
             return redirect('report')

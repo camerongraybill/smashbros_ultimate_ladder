@@ -1,9 +1,85 @@
 {% extends "smash_ladder/base.html" %}
 
-{% block title %}{{ player.user.username }}{% endblock %}
+{% block title %}{{ player.display_name }}{% endblock %}
 
 {% block content %}
-    Everything about {{ player.user.username }}!
-    {{ player.rating }}
-    {{ player.favorite_character.name }}
+    <div class="row">
+        <div class="col-sm-8">
+            <h2>{{ player.display_name }}</h2>
+            <p><strong>Favorite Character:</strong>
+                {% if player.favorite_character %}
+                    <a href="{% url "character_details" player.favorite_character.id %}">{{ player.favorite_character.name }}</a>
+                {% else %}
+                    None
+                {% endif %}
+            </p>
+            {% if player.school %}
+                <p><strong>Attends:</strong> <a
+                        href="{% url "school_details" player.school.id %}">{{ player.school.name }}</a></p>
+            {% endif %}
+            <p><strong>Rating:</strong> {{ player.rating|floatformat:-2 }}</p>
+            <p><strong>Ranking:</strong> {{ player.ranking }}</p>
+        </div>
+        <div class="col-sm-4 text-center">
+            <figure>
+                <img src="/{{ player.profile_picture.url }}" alt="" class="img-circle img-responsive profile-picture"/>
+            </figure>
+        </div>
+    </div>
+    <div class="row">
+        <h1>Recent Matches</h1>
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Opponent</th>
+                <th scope="col">Opponent's School</th>
+                <th scope="col">Outcome</th>
+                <th scope="col">Rating Change</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for set, impact in player.sets %}
+                {% if set.winner == player %}
+                    <tr class="table-success clickable-row" data-href="{% url 'match_details' set.id %}">
+                        <td>
+                            <a href="{% url "player_details" set.loser.id %}">{{ set.loser.display_name }}</a>
+                        </td>
+                        <td>
+                            {% if set.loser.school %}
+                                <a href="{% url "school_details" set.loser.school.id %}">{{ set.loser.school.name }}</a>
+                            {% else %}
+                                None
+                            {% endif %}
+                        </td>
+                        <td>
+                            Win
+                        </td>
+                        <td>
+                            {{ impact|floatformat:-2 }}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr class="table-danger clickable-row" data-href="{% url 'match_details' set.id %}">
+                        <td>
+                            <a href="{% url "player_details" set.winner.id %}">{{ set.winner.display_name }}</a>
+                        </td>
+                        <td>
+                            {% if set.winner.school %}
+                                <a href="{% url "school_details" set.winner.school.id %}">{{ set.winner.school.name }}</a>
+                            {% else %}
+                                None
+                            {% endif %}
+                        </td>
+                        <td>
+                            Loss
+                        </td>
+                        <td>
+                            {{ impact|floatformat:-2 }}
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

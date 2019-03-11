@@ -3,5 +3,105 @@
 {% block title %}{{ school.name }}{% endblock %}
 
 {% block content %}
-    Everything about {{ school.name }}!
+    <div class="row">
+        <div class="col-sm-8">
+            <h2>{{ school.name }}</h2>
+            <p><strong>Location:</strong> {{ school.location }}</p>
+            <p><strong>Mascot:</strong> {{ school.mascot }}</p>
+            {% if school.description %}
+                <p><strong>About:</strong> {{ school.description }}</p>
+            {% endif %}
+        </div>
+        <div class="col-sm-4 text-center">
+            <figure>
+                <img src="/{{ school.photo.url }}" alt="" class="img-circle img-responsive profile-picture"/>
+            </figure>
+        </div>
+    </div>
+    <div class="row">
+        <h1>Roster</h1>
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Rating</th>
+                <th scope="col">Ranking</th>
+                <th scope="col">Favorite Character</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for player in school.players.all %}
+                <tr class="clickable-row" data-href="{% url "player_details" player.id %}">
+                    <td>
+                        {{ player.display_name }}
+                    </td>
+                    <td>
+                        {{ player.rating|floatformat:-2 }}
+                    </td>
+                    <td>
+                        {{ player.ranking }}
+                    </td>
+                    <td>
+                        {% if player.favorite_character %}
+                            <a href="{% url "character_details" player.favorite_character.id %}">{{ player.favorite_character.name}}</a>
+                        {% else %}
+                            None
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <h1>Recent Matches</h1>
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">{{ school.name }} Player</th>
+                <th scope="col">Opposing School</th>
+                <th scope="col">Opposing Player</th>
+                <th scope="col">Outcome (for {{ school.name }})</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for match in school.matches %}
+                {% if forloop.counter < 10 %}
+                    {% if match.winner.school == school %}
+                        <tr class="table-success clickable-row" data-href="{% url 'match_details' match.id %}">
+                            <td>
+                                <a href="{% url "player_details" match.winner.id %}">{{ match.winner.display_name }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url "school_details" match.loser.school.id %}">{{ match.loser.school.name }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url "player_details" match.loser.id %}">{{ match.loser.display_name }}</a>
+                            </td>
+                            <td>
+                                Win
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr class="table-danger clickable-row" data-href="{% url 'match_details' match.id %}">
+                            <td>
+                                <a href="{% url "player_details" match.loser.id %}">{{ match.loser.display_name }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url "school_details" match.winner.school.id %}">{{ match.winner.school.name }}</a>
+                            </td>
+                            <td>
+                                <a href="{% url "player_details" match.winner.id %}">{{ match.winner.display_name }}</a>
+                            </td>
+                            <td>
+                                Loss
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endif %}
+
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

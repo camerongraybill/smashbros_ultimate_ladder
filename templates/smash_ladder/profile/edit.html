@@ -1,12 +1,14 @@
 {% extends 'smash_ladder/base.html' %}
 
+{% load crispy_forms_tags %}
+
 {% block title %}Edit Profile{% endblock %}
 
 {% block content %}
-<h2>Edit your Profile</h2>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Confirm Changes</button>
-</form>
+    <h2>Edit your Profile</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <button type="submit">Confirm Changes</button>
+    </form>
 {% endblock %}

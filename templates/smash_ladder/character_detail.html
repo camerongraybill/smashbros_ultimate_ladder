@@ -3,6 +3,58 @@
 {% block title %}{{ character.name }}{% endblock %}
 
 {% block content %}
-    Everything about {{ character.name }}!
-    <img alt="{{ character.name }}" src="/{{ character.photo.url }}" class="profile-picture"/>
+    <div class="row">
+        <div class="col-sm-8">
+            <h2>{{ character.name }}</h2>
+            <p><strong>Most Active Player:</strong> <a
+                    href="{% url "player_details" character.most_active_user.id %}">{{ character.most_active_user.display_name }}</a>
+            </p>
+            <p><strong>About:</strong> {{ character.description }}</p>
+        </div>
+        <div class="col-sm-4 text-center">
+            <figure>
+                <img src="/{{ character.photo.url }}" alt="" class="img-circle img-responsive profile-picture"/>
+            </figure>
+        </div>
+    </div>
+    <div class="row">
+        <h1>Recent Games</h1>
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Winner</th>
+                <th scope="col">Winning Character</th>
+                <th scope="col">Loser</th>
+                <th scope="col">Losing Character</th>
+                <th scope="col">Outcome (for {{ character.name }})</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for game in character.games %}
+                <tr class="{% if game.winner_char == character %}table-success{% else %}table-danger{% endif %}">
+                    <td>
+                        <a href="{% url "player_details" game.winner.id %}">{{ game.winner.display_name }}</a>
+                    </td>
+                    <td>
+                        <a href="{% url "character_details" game.winner_char.id %}">{{ game.winner_char.name }}</a>
+                    </td>
+                    <td>
+                        <a href="{% url "player_details" game.loser.id %}">{{ game.loser.display_name }}</a>
+                    </td>
+                    <td>
+                        <a href="{% url "character_details" game.loser_char.id %}">{{ game.loser_char.name }}</a>
+                    </td>
+                    <td>
+                        {% if game.winner_char == character %}
+                            Win
+                        {% else %}
+                            Loss
+                        {% endif %}
+                    </td>
+
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

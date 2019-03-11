@@ -18,6 +18,14 @@
     <script src="{% static "smash_ladder/scripts/bootstrap.min.js" %}"></script>
     <link rel="shortcut icon" href="{% static 'smash_ladder/images/logo.ico' %}">
     {% block script %}{% endblock %}
+    <script>
+        jQuery(document).ready(function ($) {
+            // add class to create rows that can be clicked, used in many tables
+            $(".clickable-row").click(function () {
+                window.location = $(this).data("href");
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -41,9 +49,6 @@
                             <li class="nav-item{% if active == 'Leader Board' %} active{% endif %}">
                                 <a class="nav-link" href="{% url "leader_board" %}">Leader Board</a>
                             </li>
-                            <li class="nav-item{% if active == 'Stats' %} active{% endif %}">
-                                <a class="nav-link" href="{% url "stats" %}">Stats</a>
-                            </li>
                             <li class="nav-item dropdown {% if active == 'Players' %} active{% endif %}">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -52,7 +57,7 @@
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     {% for player in players %}
                                         <a class="dropdown-item"
-                                           href="{% url "player_details" player.id %}">{{ player.user.username }}</a>
+                                           href="{% url "player_details" player.id %}">{{ player.display_name }}</a>
                                     {% endfor %}
                                 </div>
                             </li>
@@ -87,14 +92,24 @@
                             {% endif %}
                         </ul>
                         <ul class="navbar-nav ml-auto">
-                            <li class="nav-item {% if active == 'Profile' %} active{% endif %}">
-                                {% if user.is_authenticated %}
+                            {% if user.is_authenticated %}
+                                <li class="nav-item {% if active == 'Profile' %} active{% endif %}">
                                     <a class="nav-link"
                                        href="{% url "profile" %}">Hi {{ user.username }}</a>
-                                {% else %}
+                                </li>
+                                <li class="nav-item">
+                                <a class="nav-link" href="{% url "logout" %}">Log Out</a>
+                                </li>
+                            {% else %}
+                                <li class="nav-item {% if active == 'Login' %} active{% endif %}">
+
                                     <a class="nav-link" href="{% url "login" %}">Log in</a>
-                                {% endif %}
-                            </li>
+                                </li>
+                                <li class="nav-item {% if active == 'Signup' %} active{% endif %}">
+
+                                    <a class="nav-link" href="{% url "signup" %}">Sign Up</a>
+                                </li>
+                            {% endif %}
                         </ul>
 
                     </div>

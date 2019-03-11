@@ -8,7 +8,7 @@ from .models import Profile, Character
 class EditProfileForm(ModelForm):
     class Meta:
         model = Profile
-        fields = ('school', 'profile_picture')
+        exclude = ('user',)
 
 
 class GameReportForm(Form):

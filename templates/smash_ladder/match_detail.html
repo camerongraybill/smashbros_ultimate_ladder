@@ -1,0 +1,59 @@
+{% extends "smash_ladder/base.html" %}
+
+{% block title %}{{ match.winner.display_name }} vs {{ match.loser.display_name }}{% endblock %}
+
+{% block content %}
+    <h1>Match Report</h1>
+    <div class="row">
+        <div class="col-sm-5 text-center">
+            <div class="row"><img src="/{{ match.winner.profile_picture.url }}" alt="" class="profile-picture"/></div>
+            <div class="row"><a href="{% url "player_details" match.winner.id %}">
+                <h3>{{ match.winner.display_name }}</h3></a></div>
+            <div class="row"><a href="{% url "school_details" match.winner.school.id %}"><h3>{{ match.winner.school.name }}</h3></a></div>
+            <div class="row"><p><strong>Rating Change:</strong> {{ match.winner_rating_change|floatformat:-2 }}</p>
+            </div>
+
+        </div>
+        <div class="col-sm-2 text-center">
+            VS
+        </div>
+        <div class="col-sm-5 text-center">
+            <div class="row"><img src="/{{ match.loser.profile_picture.url }}" alt="" class="profile-picture"/></div>
+            <div class="row"><a href="{% url "player_details" match.loser.id %}"><h3>{{ match.loser.display_name }}</h3></a></div>
+            <div class="row"><a href="{% url "school_details" match.loser.school.id %}"><h3>{{ match.loser.school.name }}</h3></a></div>
+            <div class="row"><p><strong>Rating Change:</strong> {{ match.loser_rating_change|floatformat:-2 }}</p></div>
+
+        </div>
+    </div>
+    <div class="row">
+        <h1>Games</h1>
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Winner</th>
+                <th scope="col">Winning Character</th>
+                <th scope="col">Loser</th>
+                <th scope="col">Losing Character</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for game in match.games.all %}
+                <tr>
+                    <td>
+                        {{ game.winner.display_name }}
+                    </td>
+                    <td>
+                        <a href="{% url "character_details" game.winner_char.id %}">{{ game.winner_char.name }}</a>
+                    </td>
+                    <td>
+                        {{ game.loser.display_name }}
+                    </td>
+                    <td>
+                        <a href="{% url "character_details" game.loser_char.id %}">{{ game.loser_char.name }}</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

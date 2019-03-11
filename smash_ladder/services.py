@@ -1,23 +1,24 @@
-from typing import Iterable, Tuple, Dict, NewType, cast
+from typing import Iterable, Tuple, Dict, NewType, cast, TYPE_CHECKING
 
 import smash_ladder
 from .apps import RatingServiceConfig
 from .apps import SmashLadderConfig
 
-SetId = NewType('SetId', int)
+if TYPE_CHECKING:
+    from .models import Set, Profile
 
 RatingChange = NewType('RatingChange', float)
 
 Rating = NewType('Rating', float)
 
 
-class SetImpact(Dict[smash_ladder.models.Profile, RatingChange]):
-    def __missing__(self, key: smash_ladder.models.Profile):
+class SetImpact(Dict["Profile", RatingChange]):
+    def __missing__(self, key: "Profile"):
         return 0
 
 
-class ImpactStorage(Dict[SetId, SetImpact]):
-    def __missing__(self, key: SetId):
+class ImpactStorage(Dict["Set", SetImpact]):
+    def __missing__(self, key: "Set"):
         self[key] = SetImpact()
         return self[key]
 
@@ -36,11 +37,11 @@ class _RatingService:
         self._set_impacts.clear()
         self._build_ratings()
 
-    def get_set_impact(self, event_id: SetId) -> SetImpact:
-        return self._set_impacts[event_id]
+    def get_set_impact(self, event: "Set") -> SetImpact:
+        return self._set_impacts[event]
 
-    def add_set(self, event: smash_ladder.models.Set) -> SetImpact:
-        impact = self.get_set_impact(cast(SetId, event.id))
+    def add_set(self, event: "Set") -> SetImpact:
+        impact = self.get_set_impact(event)
         p1, p2 = event.winner, event.loser
         p1_before, p2_before = self.get_rating_for(p1), self.get_rating_for(p2)
         p1_expected = p1_before / (p1_before + p2_before)
@@ -52,12 +53,18 @@ class _RatingService:
                                  self.config.k_factor * (p2_actual - p2_expected)
         return impact
 
-    def get_rating_for(self, user: smash_ladder.models.Profile) -> Rating:
+    def get_rating_for(self, user: "Profile") -> Rating:
         return cast(Rating,
                     self.config.default_rating + sum(x[user] for x in self._set_impacts.values()))
 
-    def get_ratings(self, users: Iterable[smash_ladder.models.Profile]) -> Iterable[
-        Tuple[smash_ladder.models.Profile, Rating]]:
+    def get_ranking_for(self, user: "Profile"):
+        all_ratings = list(self.get_ratings(smash_ladder.models.Profile.objects.all()))
+        sorted_ratings = sorted(all_ratings, key=lambda x: x[1], reverse=True)
+        just_players = list(x[0] for x in sorted_ratings)
+        return just_players.index(user) + 1
+
+    def get_ratings(self, users: Iterable["Profile"]) -> Iterable[
+        Tuple["Profile", Rating]]:
         for user in users:
             yield user, self.get_rating_for(user)
 
